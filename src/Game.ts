@@ -6,6 +6,7 @@ import { Player } from './Player'
 export type GameProps = {
   readonly draw: Draw
   readonly keyboard: KeyboardManager
+  readonly websocket: WebSocket
 }
 
 export class Game {
@@ -20,14 +21,12 @@ export class Game {
    */
   constructor(
     private readonly _draw: Draw,
-    private readonly _keyboard: KeyboardManager
+    private readonly _keyboard: KeyboardManager,
+    private readonly _websocket: WebSocket
   ) {
 
     this._player = Player.create({
-      game: this,
-      initialX: 50,
-      initialY: 50,
-      speed: 0.1
+      game: this
     })
     this._fps = new FPS()
 
@@ -45,6 +44,14 @@ export class Game {
 
   get draw() {
     return this._draw
+  }
+
+  get websocket() {
+    return this._websocket
+  }
+
+  get player() {
+    return this._player
   }
 
   get keyboard() {
@@ -92,7 +99,7 @@ export class Game {
   }
 
   static create(props: GameProps): Game {
-    return new Game(props.draw, props.keyboard)
+    return new Game(props.draw, props.keyboard, props.websocket)
   }
 
   static createAndLaunch(props: GameProps): Game | false {
