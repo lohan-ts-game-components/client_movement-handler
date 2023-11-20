@@ -10,14 +10,17 @@ export type PlayerProps = {
 };
 
 export class Player {
-  private _x: number | null;
-  private _y: number | nul;
+  private _x: number = 0;
+  private _y: number = 0;
   private kb: KeyboardManager;
+  private draw: Draw;
+  private lastSendTime: number = 0; // Ajoutez cette ligne
 
   constructor(
     private readonly game: Game
   ) {
     this.kb = game.keyboard;
+    this.draw = game.draw;
     console.log("Player created!");
   }
 
@@ -29,26 +32,30 @@ export class Player {
     return this._y;
   }
   private move(dt: number) {
-    /**
-     * Récupère l'état des touches de contrôle du joueur
-     */
     const keyUp = this.kb.state("KeyW");
     const keyDown = this.kb.state("KeyS");
     const keyLeft = this.kb.state("KeyA");
     const keyRight = this.kb.state("KeyD");
-
+  
     if (keyUp == 1 || keyDown == 1 || keyLeft == 1 || keyRight == 1) {
-      const direction = {
-        up: keyUp,
-        right: keyRight,
-        down: keyDown,
-        left: keyLeft,
-        dt: dt,
-      };
-      this.game.websocket.send(pack({ clientDirection: direction }));
+      // Prédiction du client
+      const distance = 0.5 * dt;
+      const dx = -((keyLeft - keyRight) * distance);
+      const dy = -((keyUp - keyDown) * distance);
+      this._x += dx;
+      this._y += dy;
+  
+      // Envoyer les directions au serveur
+      const currentTime = Date.now();
+      if (currentTime - this.lastSendTime >= 100) {
+        this.lastSendTime = currentTime;
+        const direction = { up: keyUp, right: keyRight, down: keyDown, left: keyLeft, dt: dt };
+        this.game.websocket.send(pack({ clientDirection: direction }));
+      }
     }
   }
 
+  // Get position data from the server
   private updatePosition(newX: number, newY: number) {
     this._x = newX;
     this._y = newY;
