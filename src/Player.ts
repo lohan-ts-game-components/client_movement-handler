@@ -12,9 +12,15 @@ export type PlayerProps = {
 export class Player {
   private _x: number = 0;
   private _y: number = 0;
+  private prevX: number = 0;
+  private prevY: number = 0;
+  private targetX: number = 0;
+  private targetY: number = 0;
+  private lerpFactor: number = 0.125;
   private kb: KeyboardManager;
   private draw: Draw;
-  private lastSendTime: number = 0; // Ajoutez cette ligne
+
+  private lastDirection = { up: 0, right: 0, down: 0, left: 0 };
 
   constructor(
     private readonly game: Game
@@ -31,38 +37,41 @@ export class Player {
   get y() {
     return this._y;
   }
-  private move(dt: number) {
+  private move() {
     const keyUp = this.kb.state("KeyW");
     const keyDown = this.kb.state("KeyS");
     const keyLeft = this.kb.state("KeyA");
     const keyRight = this.kb.state("KeyD");
-  
-    if (keyUp == 1 || keyDown == 1 || keyLeft == 1 || keyRight == 1) {
-      // Prédiction du client
-      const distance = 0.5 * dt;
-      const dx = -((keyLeft - keyRight) * distance);
-      const dy = -((keyUp - keyDown) * distance);
-      this._x += dx;
-      this._y += dy;
-  
-      // Envoyer les directions au serveur
-      const currentTime = Date.now();
-      if (currentTime - this.lastSendTime >= 100) {
-        this.lastSendTime = currentTime;
-        const direction = { up: keyUp, right: keyRight, down: keyDown, left: keyLeft, dt: dt };
-        this.game.websocket.send(pack({ clientDirection: direction }));
-      }
+
+    const directionChanged = 
+      keyUp !== this.lastDirection.up || 
+      keyDown !== this.lastDirection.down ||
+      keyLeft !== this.lastDirection.left ||
+      keyRight !== this.lastDirection.right;
+
+    if (directionChanged) {
+      const direction = { up: keyUp, right: keyRight, down: keyDown, left: keyLeft};
+      this.game.websocket.send(pack({ clientDirection: direction }));
+      this.lastDirection = { up: keyUp, right: keyRight, down: keyDown, left: keyLeft };
     }
   }
 
   // Get position data from the server
   private updatePosition(newX: number, newY: number) {
-    this._x = newX;
-    this._y = newY;
+    this.prevX = this._x;
+    this.prevY = this._y;
+    this.targetX = newX;
+    this.targetY = newY;
+  }
+
+  private interpolatePosition(dt: number) {
+    this._x += (this.targetX - this._x) * this.lerpFactor;
+    this._y += (this.targetY - this._y) * this.lerpFactor;
   }
 
   public update(dt: number) {
-    this.move(dt);
+    this.move();
+    this.interpolatePosition(dt);
   }
 
   static create(props: PlayerProps): Player {
