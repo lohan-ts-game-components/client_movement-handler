@@ -16,15 +16,13 @@ export class Player {
   private prevY: number = 0;
   private targetX: number = 0;
   private targetY: number = 0;
-  private lerpFactor: number = 0.125;
+  private lerpFactor: number = 0.1;
   private kb: KeyboardManager;
   private draw: Draw;
 
   private lastDirection = { up: 0, right: 0, down: 0, left: 0 };
 
-  constructor(
-    private readonly game: Game
-  ) {
+  constructor(private readonly game: Game) {
     this.kb = game.keyboard;
     this.draw = game.draw;
     console.log("Player created!");
@@ -37,22 +35,33 @@ export class Player {
   get y() {
     return this._y;
   }
+
   private move() {
     const keyUp = this.kb.state("KeyW");
     const keyDown = this.kb.state("KeyS");
     const keyLeft = this.kb.state("KeyA");
     const keyRight = this.kb.state("KeyD");
 
-    const directionChanged = 
-      keyUp !== this.lastDirection.up || 
+    const directionChanged =
+      keyUp !== this.lastDirection.up ||
       keyDown !== this.lastDirection.down ||
       keyLeft !== this.lastDirection.left ||
       keyRight !== this.lastDirection.right;
 
     if (directionChanged) {
-      const direction = { up: keyUp, right: keyRight, down: keyDown, left: keyLeft};
+      const direction = {
+        up: keyUp,
+        right: keyRight,
+        down: keyDown,
+        left: keyLeft,
+      };
       this.game.websocket.send(pack({ clientDirection: direction }));
-      this.lastDirection = { up: keyUp, right: keyRight, down: keyDown, left: keyLeft };
+      this.lastDirection = {
+        up: keyUp,
+        right: keyRight,
+        down: keyDown,
+        left: keyLeft,
+      };
     }
   }
 
