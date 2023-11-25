@@ -39,7 +39,7 @@ function connectWebSocket() {
     console.log("Received message:", event.data);
     const data = JSON.parse(event.data);
     if (data.clientPosition) {
-      game.player.updatePosition(data.clientPosition.x, data.clientPosition.y)
+      game.player.updatePosition(data.clientPosition.x, data.clientPosition.y);
     }
   });
 
