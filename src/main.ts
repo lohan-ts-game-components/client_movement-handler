@@ -1,59 +1,56 @@
+// Import necessary classes and the stylesheet.
 import { Draw } from "./Draw";
 import { Game } from "./Game";
 import { KeyboardManager } from "./KeyboardManager";
-
 import "./style.css";
-let game: Game | any;
 
+// Variables for game instance and WebSocket.
+let game: Game | any;
 let ws: WebSocket;
+
+// Function to establish and manage WebSocket connection.
 function connectWebSocket() {
+  // Initialize WebSocket with the server URL.
   ws = new WebSocket("ws://localhost:8000");
 
-  ws.addEventListener("open", (event) => {
+  // When the WebSocket connection opens, set up the game.
+  ws.addEventListener("open", () => {
     console.log("WebSocket connection opened.");
-    // let msg = pack({ gfs: 'map', name: 'Grassland' })
-    // ws.send(msg)
-    const canvas: HTMLElement | any = document.getElementById("canvas");
 
-    const draw = Draw.create({
-      canvas: canvas,
-      alpha: true,
-    });
+    // Set up drawing context and keyboard manager.
+    const canvas = document.getElementById("canvas") as HTMLElement;
+    const draw = Draw.create({ canvas: canvas, alpha: true });
     const kbm = new KeyboardManager();
 
-    game = Game.createAndLaunch({
-      draw: draw,
-      keyboard: kbm,
-      websocket: ws,
-    });
-
-    if (!game) {
-      console.error("Game not created!");
-    } else {
+    // Create and start the game.
+    game = Game.createAndLaunch({ draw, keyboard: kbm, websocket: ws });
+    if (game) {
       console.log("Start Game!");
       kbm.watch();
+    } else {
+      console.error("Game not created!");
     }
   });
 
+  // Handle incoming messages from the server.
   ws.addEventListener("message", (event) => {
-    console.log("Received message:", event.data);
     const data = JSON.parse(event.data);
     if (data.clientPosition) {
       game.player.updatePosition(data.clientPosition.x, data.clientPosition.y);
     }
   });
 
-  ws.addEventListener("close", (event) => {
+  // Attempt to reconnect if the WebSocket connection closes.
+  ws.addEventListener("close", () => {
     console.log("WebSocket connection closed.");
-    // Handle the close event and attempt to reconnect
-    setTimeout(() => {
-      connectWebSocket(); // Retry the connection
-    }, 2000); // Retry every 2 seconds (you can adjust the interval)
+    setTimeout(connectWebSocket, 2000); // Retry connection after 2 seconds.
   });
 
+  // Log WebSocket errors.
   ws.addEventListener("error", (error) => {
     console.error("WebSocket error:", error);
-    // Handle the error, you may also want to attempt a reconnection here
   });
 }
+
+// Initiate WebSocket connection.
 connectWebSocket();

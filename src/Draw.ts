@@ -4,13 +4,15 @@ export type DrawProps = {
 };
 
 export class Draw {
+  // Logs an error if a rendering context cannot be obtained.
   private static getCtxError(canvas: HTMLCanvasElement): false {
     console.error(
-      `Impossible d'obtenir un contexte de rendu 2D du canvas d'identifiant "${canvas.id}"`
+      `Unable to obtain a 2D rendering context for the canvas ID: "${canvas.id}"`
     );
     return false;
   }
 
+  // Static method to create a Draw instance with a primary and offscreen canvas.
   static create(props: DrawProps): Draw | false {
     const ctx = props.canvas.getContext("2d", { alpha: props.alpha });
     if (ctx == null) {
@@ -36,6 +38,7 @@ export class Draw {
     );
   }
 
+  // Constructor initializes canvases and contexts.
   private constructor(
     private readonly _canvas: HTMLCanvasElement,
     private readonly _ctx: CanvasRenderingContext2D,
@@ -46,6 +49,7 @@ export class Draw {
     console.log("Draw created!");
   }
 
+  // Getter methods for canvas properties.
   get canvas() {
     return this._offscreenCanvas;
   }
@@ -62,7 +66,7 @@ export class Draw {
     return this._canvas.height;
   }
 
-  //rectangle plein
+  // Methods for drawing shapes and text on the offscreen canvas.
   drawRectangle(
     x: number,
     y: number,
@@ -128,20 +132,20 @@ export class Draw {
     this._offscreenCtx.strokeStyle = color;
     this._offscreenCtx.beginPath();
     this._offscreenCtx.arc(x, y, radius, startAngle, endAngle);
-
     if (isFill) {
       this._offscreenCtx.fillStyle = color;
       this._offscreenCtx.fill();
     }
-
     this._offscreenCtx.stroke();
   }
 
+  // Clears both the offscreen and primary canvases.
   clear() {
     this._offscreenCtx.clearRect(0, 0, this.width, this.height);
     this._ctx.clearRect(0, 0, this.width, this.height);
   }
 
+  // Draws the offscreen canvas onto the primary canvas.
   syncScreen() {
     this._ctx.drawImage(this._offscreenCanvas, 0, 0);
   }
