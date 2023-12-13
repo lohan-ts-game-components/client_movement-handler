@@ -7,7 +7,7 @@ Git of the Bun.js server : https://github.com/lohan-ts-game-components/server_mo
 ## Key Features
 
 - **Player Movement Management**: Handles player movements within the game environment.
-- **|WIP| WebSocket Communication**: Uses WebSockets for real-time communication with the game server.
+- **WebSocket Communication**: Uses WebSockets for real-time communication with the game server.
 - **Graphics Rendering**: Integrates rendering capabilities to display the player and their movements on screen.
 
 ## Project Structure
